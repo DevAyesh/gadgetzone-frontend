@@ -55,6 +55,10 @@ export default async function AdminLayout({
             <Tags className="h-5 w-5 text-primary" />
             Categories
           </Link>
+          <Link href="/admin/collections" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted text-sm font-medium transition-colors">
+            <LayoutDashboard className="h-5 w-5 text-primary" />
+            Collections
+          </Link>
           <Link href="/admin/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted text-sm font-medium transition-colors">
             <ShoppingCart className="h-5 w-5 text-primary" />
             Orders
