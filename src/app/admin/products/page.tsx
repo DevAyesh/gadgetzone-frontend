@@ -21,12 +21,16 @@ export default async function AdminProductsPage(props: {
   // Fetch categories
   const { data: categories } = await supabase.from("categories").select("*").order("name");
 
+  // Fetch collections
+  const { data: collections } = await supabase.from("collections").select("*").order("name");
+
   // Fetch products
   let query = supabase
     .from("products")
     .select(`
       *,
       category:categories(name),
+      collection:collections(name),
       images:product_images(image_url, is_primary)
     `)
     .order("created_at", { ascending: false });
@@ -47,7 +51,7 @@ export default async function AdminProductsPage(props: {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Products Management</h1>
-        <AddProductDialog categories={categories || []} />
+        <AddProductDialog categories={categories || []} collections={collections || []} />
       </div>
 
       <DataTableToolbar 
@@ -63,6 +67,7 @@ export default async function AdminProductsPage(props: {
               <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Product Name</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Collection</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead>Status</TableHead>
@@ -86,6 +91,11 @@ export default async function AdminProductsPage(props: {
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{product.category?.name || "None"}</TableCell>
+                    <TableCell>
+                      {product.collection?.name ? (
+                        <Badge variant="outline">{product.collection.name}</Badge>
+                      ) : "None"}
+                    </TableCell>
                     <TableCell>{formatPrice(product.price)}</TableCell>
                     <TableCell>
                       <Badge variant={product.stock > 10 ? "default" : "destructive"}>

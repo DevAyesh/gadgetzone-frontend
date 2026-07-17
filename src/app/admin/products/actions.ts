@@ -10,6 +10,7 @@ export async function addProduct(formData: FormData) {
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
   const category_id = formData.get("category_id") as string;
+  const collection_id = formData.get("collection_id") as string;
   const price = parseFloat(formData.get("price") as string) * 100; // Convert to cents
   const oldPriceStr = formData.get("old_price") as string;
   const old_price = oldPriceStr ? parseFloat(oldPriceStr) * 100 : null;
@@ -22,6 +23,7 @@ export async function addProduct(formData: FormData) {
     name,
     slug,
     category_id: category_id === "none" ? null : category_id,
+    collection_id: collection_id === "none" ? null : collection_id,
     price,
     old_price,
     stock,
@@ -70,6 +72,7 @@ export async function updateProduct(formData: FormData) {
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
   const category_id = formData.get("category_id") as string;
+  const collection_id = formData.get("collection_id") as string;
   const price = parseFloat(formData.get("price") as string) * 100;
   const stock = parseInt(formData.get("stock") as string, 10);
   const badge = formData.get("badge") as string;
@@ -80,6 +83,7 @@ export async function updateProduct(formData: FormData) {
     name,
     slug,
     category_id: category_id === "none" ? null : category_id,
+    collection_id: collection_id === "none" ? null : collection_id,
     price,
     stock,
     badge: badge === "NONE" ? "" : badge,

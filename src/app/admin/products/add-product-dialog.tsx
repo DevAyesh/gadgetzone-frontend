@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { addProduct } from "./actions";
 
-export function AddProductDialog({ categories }: { categories: any[] }) {
+export function AddProductDialog({ categories, collections }: { categories: any[], collections: any[] }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -81,6 +81,19 @@ export function AddProductDialog({ categories }: { categories: any[] }) {
                 <option value="none">Select Category...</option>
                 {categories?.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="collection_id">Collection (Optional)</label>
+              <select 
+                id="collection_id" name="collection_id"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="none">None</option>
+                {collections?.map(col => (
+                  <option key={col.id} value={col.id}>{col.name}</option>
                 ))}
               </select>
             </div>
