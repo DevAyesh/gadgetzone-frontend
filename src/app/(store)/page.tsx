@@ -148,52 +148,79 @@ export default function Home() {
       {/* Shop Collection Section */}
       <section className="py-16">
         <div className="container mx-auto px-4 md:px-8">
-          <h2 className="text-2xl font-bold tracking-tight mb-8">Shop Collection</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-auto md:h-[500px]">
-            {/* Left Large Box */}
-            <div className="bg-[#F5F5F5] rounded-md relative p-12 overflow-hidden flex flex-col justify-end h-[300px] md:h-full group cursor-pointer">
+          <h2 className="text-3xl font-extrabold tracking-tight mb-8">Shop Collection</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 h-auto lg:h-[600px]">
+            {/* Left Large Box - Centered Text */}
+            <div className="rounded-2xl relative overflow-hidden flex flex-col justify-center items-center text-center h-[400px] lg:h-full group cursor-pointer shadow-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
-                src="https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80" 
-                alt="Headphones Collection" 
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-3/4 object-contain group-hover:scale-105 transition-transform duration-500 mix-blend-multiply"
+                src="https://pisces.bbystatic.com/image2/BestBuy_US/dam/bento-4844950-FY26-AppleBrandStore-AppleDeals_sv-b038cf90-9b51-4a56-b959-2a7f7c42f29a.jpg;format=webp" 
+                alt="Apple Products" 
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="relative z-10">
-                <h3 className="text-3xl font-bold mb-2">Headphones</h3>
-                <Link href="/shop" className="text-sm font-medium hover:underline inline-flex items-center gap-1 border border-black/20 px-3 py-1 bg-white/50 backdrop-blur-sm rounded">
-                  Collection <ArrowRight className="h-3 w-3" />
+              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors pointer-events-none" />
+              <div className="relative z-10 p-8 text-white flex flex-col items-center">
+                <h3 className="text-3xl md:text-5xl font-bold mb-3 tracking-tight">Apple Products</h3>
+                <Link href="/shop" className="text-sm font-semibold hover:underline inline-flex items-center gap-1 group/link text-white/90">
+                  Explore <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </div>
             
             {/* Right Stacked Boxes */}
-            <div className="grid grid-rows-2 gap-6 h-[500px] md:h-full">
-              <div className="bg-[#F8F9FA] rounded-md relative p-8 overflow-hidden flex flex-col justify-center h-full group cursor-pointer">
+            <div className="grid grid-rows-2 gap-4 md:gap-6 h-[800px] lg:h-full">
+              {/* Top Wide Box - Top Left Text (Now Gaming Consoles) */}
+              <div className="rounded-2xl relative overflow-hidden flex flex-col justify-start items-start h-full group cursor-pointer shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
-                  src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80" 
-                  alt="Earbuds Collection" 
-                  className="absolute right-0 top-0 w-1/2 h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply"
+                  src="https://pisces.bbystatic.com/image2/BestBuy_US/dam/4672150-VG-cope-0389c629-d4c2-4afd-9ec0-46adadd4b8cf.jpg;maxHeight=455;maxWidth=815" 
+                  alt="Gaming Consoles" 
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 object-center"
                 />
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold mb-2">Earbuds</h3>
-                  <Link href="/shop" className="text-sm font-medium hover:underline inline-flex items-center gap-1 border border-black/20 px-3 py-1 bg-white/50 backdrop-blur-sm rounded">
-                    Collection <ArrowRight className="h-3 w-3" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-transparent pointer-events-none transition-opacity group-hover:opacity-90" />
+                <div className="relative z-10 p-8 text-white text-left">
+                  <h3 className="text-2xl md:text-4xl font-bold mb-2 tracking-tight">Gaming Consoles</h3>
+                  <Link href="/shop" className="text-sm font-semibold hover:underline inline-flex items-center gap-1 group/link text-white/90">
+                    Explore <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
                   </Link>
                 </div>
               </div>
-              <div className="bg-[#F8F9FA] rounded-md relative p-8 overflow-hidden flex flex-col justify-center h-full group cursor-pointer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src="https://images.unsplash.com/photo-1572569433602-6663dbb38a79?w=600&q=80" 
-                  alt="Accessories Collection" 
-                  className="absolute right-0 top-0 w-1/2 h-full object-cover group-hover:scale-105 transition-transform duration-500 mix-blend-multiply"
-                />
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold mb-2">Accessories</h3>
-                  <Link href="/shop" className="text-sm font-medium hover:underline inline-flex items-center gap-1 border border-black/20 px-3 py-1 bg-white/50 backdrop-blur-sm rounded">
-                    Collection <ArrowRight className="h-3 w-3" />
-                  </Link>
+              
+              {/* Bottom Split Boxes */}
+              <div className="grid grid-cols-2 gap-4 md:gap-6 h-full">
+                {/* Bottom Left - Centered Text (Accessories) */}
+                <div className="rounded-2xl relative overflow-hidden flex flex-col justify-center items-center text-center h-full group cursor-pointer shadow-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src="https://cdn.packhacker.com/2022/07/f1b89bdb-travel-tech-acc-featured.jpg" 
+                    alt="Accessories" 
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 object-center"
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors pointer-events-none" />
+                  <div className="relative z-10 p-4 text-white flex flex-col items-center">
+                    <h3 className="text-xl md:text-3xl font-bold mb-2 tracking-tight">Accessories</h3>
+                    <Link href="/shop" className="text-xs md:text-sm font-semibold hover:underline inline-flex items-center gap-1 group/link text-white/90">
+                      Explore <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </div>
+                
+                {/* Bottom Right - Centered Text (Now Headphones) */}
+                <div className="rounded-2xl relative overflow-hidden flex flex-col justify-center items-center text-center h-full group cursor-pointer shadow-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src="https://dlifestylesg.com/cdn/shop/files/ULT_WEAR_Black_Standard-Large_1200x.jpg?v=1712806803" 
+                    alt="Headphones" 
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 object-center"
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors pointer-events-none" />
+                  <div className="relative z-10 p-4 text-white flex flex-col items-center">
+                    <h3 className="text-xl md:text-3xl font-bold mb-2 tracking-tight">Headphones</h3>
+                    <Link href="/shop" className="text-xs md:text-sm font-semibold hover:underline inline-flex items-center gap-1 group/link text-white/90">
+                      Explore <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
