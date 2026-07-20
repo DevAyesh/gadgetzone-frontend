@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LayoutDashboard, ShoppingBag, Users, Settings, Tags, ShoppingCart, LogOut } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
@@ -15,22 +14,10 @@ export default async function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // TODO: Implement JWT-based admin auth check using cookies
+  // const token = cookies().get('token')?.value;
+  // if (!token) redirect("/login?next=/admin");
 
-  if (!user) {
-    redirect("/login?next=/admin");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "super_admin")) {
-    redirect("/?error=Unauthorized Access");
-  }
 
   return (
     <div className="flex min-h-screen bg-background">

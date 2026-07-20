@@ -91,7 +91,6 @@ function ProductCard({ product }: { product: any }) {
 }
 
 import { HeroSlider } from "@/components/hero-slider";
-import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 
 export default async function Home() {

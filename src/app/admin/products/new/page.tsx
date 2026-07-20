@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";

@@ -2,7 +2,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Eye, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/server";
 import { OrderStatusSelect } from "@/components/admin/order-status-select";
 import { formatPrice } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

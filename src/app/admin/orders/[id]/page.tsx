@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -7,7 +6,6 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { OrderStatusUpdate } from "@/components/admin/order-status-update";
 
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export default async function AdminOrderDetailsPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;

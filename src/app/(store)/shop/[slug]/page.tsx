@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { AddToCartButton } from "@/components/add-to-cart-button";

@@ -1,7 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 

@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Users, ShoppingCart, Activity } from "lucide-react";
 import { RevenueChart } from "@/components/admin/revenue-chart";
-import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 
 export default async function AdminDashboardPage() {

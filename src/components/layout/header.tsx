@@ -4,12 +4,20 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartSheet } from "@/components/cart-sheet";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/server";
 import { SearchBar } from "@/components/search-bar";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 export async function Header() {
-  const supabase = await createClient();
-  const { data: categories } = await supabase.from("categories").select("*").order("name");
+  // Fetch categories from backend — returns [] if backend not yet available
+  let categories: any[] = [];
+  try {
+    const res = await fetch(`${API_URL}/api/categories`, { next: { revalidate: 60 } });
+    if (res.ok) categories = await res.json();
+  } catch {
+    categories = [];
+  }
+
 
   const categoryImages: Record<string, string> = {
     'smartphones': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&q=80',
