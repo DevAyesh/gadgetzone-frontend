@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GadgetZone — Frontend
+
+The customer-facing storefront and admin dashboard for **GadgetZone**, built with **Next.js 16** and **TypeScript**.
+
+---
+
+## Tech Stack
+
+| Tool | Purpose |
+|---|---|
+| Next.js 16 (App Router) | Framework |
+| React 19 | UI library |
+| TypeScript | Type safety |
+| Tailwind CSS v4 | Styling |
+| shadcn/ui | Component library |
+| Zustand | State management |
+| Recharts | Admin charts |
+| Sonner | Toast notifications |
+
+---
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── (store)/          # Customer-facing pages
+│   │   ├── page.tsx      # Homepage
+│   │   ├── shop/         # Product listing
+│   │   ├── cart/         # Shopping cart
+│   │   ├── checkout/     # Checkout flow
+│   │   ├── account/      # User account
+│   │   ├── wishlist/     # Saved items
+│   │   ├── categories/   # Browse by category
+│   │   ├── collections/  # Curated collections
+│   │   ├── sale/         # Sale items
+│   │   ├── contact/      # Contact page
+│   │   ├── about/        # About page
+│   │   └── (auth)/       # Login / Register
+│   └── admin/            # Admin dashboard
+├── components/           # Reusable UI components
+└── lib/                  # Utilities and helpers
+```
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- **Node.js** v18 or higher
+- **npm** (comes with Node.js)
+
+### Installation
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Set up environment variables
+cp .env.local.example .env.local
+# Edit .env.local and fill in the required values
+
+# 3. Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+Create a `.env.local` file in this directory with the following:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Available Scripts
 
-## Deploy on Vercel
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Pages Overview
+
+| Route | Description |
+|---|---|
+| `/` | Homepage |
+| `/shop` | All products |
+| `/cart` | Shopping cart |
+| `/checkout` | Checkout |
+| `/account` | User account & orders |
+| `/wishlist` | Saved products |
+| `/admin` | Admin dashboard |
+| `/admin/products` | Manage products |
