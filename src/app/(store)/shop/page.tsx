@@ -1,20 +1,30 @@
-// @ts-nocheck
-const mq = { select:function(){return this}, eq:function(){return this}, order:function(){return this}, limit:function(){return this}, single:async function(){return {data:null,error:null}}, ilike:function(){return this}, returns:function(){return this}, then:function(cb: any){cb({data:[],error:null})} };
-const createClient = async () => ({ from: () => mq, insert: () => mq, update: () => mq, delete: () => mq, auth: { getUser: async () => ({ data: { user: null } }), signOut: async () => {} } }) as any;
-const createSupabaseClient = createClient;
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { cn, formatPrice } from "@/lib/utils";
+import { getProducts } from "@/lib/api";
 
-// Dummy fallback in case Supabase env variables are not set yet
-const fallbackProducts = [
-  { name: "iPhone 15 Pro Max", price: 149999, old_price: 164999, badge: "HOT", slug: "iphone-15-pro-max", category: { name: "Smartphones", slug: "smartphones" }, images: [{ image_url: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&q=80", is_primary: true }] },
-  { name: "Sony WH-1000XM5", price: 34999, old_price: 39999, badge: "SALE", slug: "sony-wh-1000xm5", category: { name: "Audio", slug: "audio" }, images: [{ image_url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80", is_primary: true }] },
-  { name: "MacBook Air M3", price: 139999, old_price: 154999, badge: "NEW", slug: "macbook-air-m3", category: { name: "Laptops", slug: "laptops" }, images: [{ image_url: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80", is_primary: true }] },
-];
+
+import type {
+  CustomerProduct,
+  ProductCategory,
+  ProductCollection,
+} from "@/lib/types/customer";
+
+const getRelationSlug = (
+  relation: ProductCategory | ProductCollection | string | null | undefined,
+) => (typeof relation === "string" ? relation : relation?.slug);
+
+const getRelationName = (
+  relation: ProductCategory | ProductCollection | string | null | undefined,
+) => (typeof relation === "string" ? relation : relation?.name);
+
+const getPrimaryImage = (product: CustomerProduct) =>
+  product.images?.find((image) => image.is_primary)?.image_url ??
+  product.images?.[0]?.image_url ??
+  product.imageUrl ??
+  "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&q=80";
 
 export default async function ShopPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const searchParams = await props.searchParams;
@@ -22,50 +32,16 @@ export default async function ShopPage(props: { searchParams: Promise<{ [key: st
   const collection = typeof searchParams.collection === 'string' ? searchParams.collection : undefined;
   const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
   
-  const supabase = await createClient();
-  let products: any[] | null = null;
-
-  // Only try to fetch if Supabase URL is configured
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    const collectionJoin = collection ? "collection:collections!inner(name, slug)" : "collection:collections(name, slug)";
-    
-    let query = supabase
-      .from("products")
-      .select(`
-        *,
-        category:categories!inner(name, slug),
-        ${collectionJoin},
-        images:product_images(image_url, is_primary)
-      `)
-      .order("created_at", { ascending: false });
-
-    if (category) {
-      query = query.eq('category.slug', category);
+  const products = await getProducts({ next: { revalidate: 60 } });
+  const normalizedSearch = search?.trim().toLocaleLowerCase();
+  const displayProducts = products.filter((product) => {
+    if (category && getRelationSlug(product.category) !== category) return false;
+    if (collection && getRelationSlug(product.collection) !== collection) return false;
+    if (normalizedSearch && !product.name.toLocaleLowerCase().includes(normalizedSearch)) {
+      return false;
     }
-    
-    if (collection) {
-      query = query.eq('collection.slug', collection);
-    }
-
-    if (search) {
-      query = query.ilike('name', `%${search}%`);
-    }
-
-    const { data } = await query;
-    products = data;
-  }
-
-  // Use fallback if no database connection or empty results
-  let displayProducts = products && products.length > 0 ? products : fallbackProducts;
-
-  if ((!products || products.length === 0) && category) {
-    displayProducts = fallbackProducts.filter(p => p.category.slug === category);
-  } else if ((!products || products.length === 0) && search) {
-    displayProducts = fallbackProducts.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
-  } else if ((!products || products.length === 0) && collection) {
-    // Basic fallback for collections just to show something
-    displayProducts = fallbackProducts;
-  }
+    return true;
+  });
 
   let pageTitle = "All Products";
   if (category) {
@@ -135,13 +111,11 @@ export default async function ShopPage(props: { searchParams: Promise<{ [key: st
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayProducts.map((product, i) => {
-              const primaryImage = product.images?.find((img: any) => img.is_primary)?.image_url 
-                                  || product.images?.[0]?.image_url 
-                                  || "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&q=80";
+            {displayProducts.map((product) => {
+              const primaryImage = getPrimaryImage(product);
               
               return (
-                <Card key={i} className="group overflow-hidden border-border/50 bg-card hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col">
+                <Card key={product.id} className="group overflow-hidden border-border/50 bg-card hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col">
                   <Link href={`/shop/${product.slug}`} className="relative aspect-square overflow-hidden bg-muted block">
                     {product.badge && (
                       <Badge className="absolute top-3 left-3 z-10" variant={product.badge === 'HOT' ? 'destructive' : 'default'}>
@@ -157,7 +131,7 @@ export default async function ShopPage(props: { searchParams: Promise<{ [key: st
                   </Link>
                   <CardContent className="p-5 flex flex-col flex-1">
                     <span className="text-xs text-muted-foreground font-medium mb-1 uppercase tracking-wider">
-                      {product.category?.name || 'Uncategorized'}
+                      {getRelationName(product.category) || 'Uncategorized'}
                     </span>
                     <Link href={`/shop/${product.slug}`}>
                       <h3 className="font-semibold text-lg line-clamp-1 hover:text-primary transition-colors">{product.name}</h3>
@@ -174,7 +148,7 @@ export default async function ShopPage(props: { searchParams: Promise<{ [key: st
                     <div className="mt-auto pt-4 relative z-20">
                       <AddToCartButton 
                         product={{
-                          id: product.id || String(i),
+                          id: product.id,
                           name: product.name,
                           price: product.price,
                           slug: product.slug,
