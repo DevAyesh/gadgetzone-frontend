@@ -5,20 +5,19 @@ import { Truck, Shield, RotateCcw, Check } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 import { Metadata } from "next";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { getProductBySlug } from "@/lib/api";
+import type { CustomerProduct } from "@/lib/types/customer";
 
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const params = await props.params;
   try {
-    const res = await fetch(`${API_URL}/api/products/slug/${params.slug}`);
-    if (res.ok) {
-      const product = await res.json();
-      return {
-        title: `${product.name} | GadgetZone`,
-        description: product.description || `Buy ${product.name} at GadgetZone`,
-      };
-    }
+    const product = await getProductBySlug(params.slug, {
+      next: { revalidate: 60 },
+    });
+    return {
+      title: `${product.name} | GadgetZone`,
+      description: product.description || `Buy ${product.name} at GadgetZone`,
+    };
   } catch {}
   return { title: "Product | GadgetZone" };
 }
@@ -26,17 +25,21 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
 export default async function ProductDetailsPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
 
-  let product: any = null;
+  let product: CustomerProduct | null = null;
   try {
-    const res = await fetch(`${API_URL}/api/products/slug/${params.slug}`, { next: { revalidate: 60 } });
-    if (res.ok) product = await res.json();
+    product = await getProductBySlug(params.slug, { next: { revalidate: 60 } });
   } catch {}
 
   if (!product) {
     notFound();
   }
 
-  const primaryImage = product.images?.find((img: any) => img.is_primary)?.image_url
+  const category = product.category
+    ? typeof product.category === "string"
+      ? { name: product.category, slug: product.category }
+      : product.category
+    : null;
+  const primaryImage = product.images?.find((image) => image.is_primary)?.image_url
                       || product.images?.[0]?.image_url
                       || product.imageUrl
                       || "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800&q=80";
@@ -48,12 +51,12 @@ export default async function ProductDetailsPage(props: { params: Promise<{ slug
           <li><Link href="/" className="hover:text-primary transition-colors">Home</Link></li>
           <li><span>/</span></li>
           <li><Link href="/shop" className="hover:text-primary transition-colors">Shop</Link></li>
-          {product.category && (
+          {category && (
             <>
               <li><span>/</span></li>
               <li>
-                <Link href={`/shop?category=${product.category.slug || product.category}`} className="hover:text-primary transition-colors">
-                  {product.category.name || product.category}
+                <Link href={`/shop?category=${category.slug}`} className="hover:text-primary transition-colors">
+                  {category.name}
                 </Link>
               </li>
             </>
@@ -83,9 +86,9 @@ export default async function ProductDetailsPage(props: { params: Promise<{ slug
         </div>
 
         <div className="flex flex-col">
-          {product.category && (
+          {category && (
             <div className="text-primary font-medium tracking-wider uppercase text-sm mb-2">
-              {product.category.name || product.category}
+              {category.name}
             </div>
           )}
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">{product.name}</h1>
@@ -108,7 +111,7 @@ export default async function ProductDetailsPage(props: { params: Promise<{ slug
               </span>
             </div>
             <div className="pt-6 border-t border-border/50">
-              <AddToCartButton product={{ id: product._id || product.id, name: product.name, price: product.price, slug: product.slug, image_url: primaryImage }} className="w-full sm:w-auto px-12 py-6 text-lg" />
+              <AddToCartButton product={{ id: product.id, name: product.name, price: product.price, slug: product.slug, image_url: primaryImage }} className="w-full sm:w-auto px-12 py-6 text-lg" />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-border/50">

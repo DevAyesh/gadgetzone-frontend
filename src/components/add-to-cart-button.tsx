@@ -18,9 +18,10 @@ interface AddToCartButtonProps {
   variant?: "default" | "outline" | "secondary" | "ghost" | "link";
   showIcon?: boolean;
   iconOnly?: boolean;
+  disabled?: boolean;
 }
 
-export function AddToCartButton({ product, className, variant = "default", showIcon = true, iconOnly = false }: AddToCartButtonProps) {
+export function AddToCartButton({ product, className, variant = "default", showIcon = true, iconOnly = false, disabled = false }: AddToCartButtonProps) {
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -44,11 +45,12 @@ export function AddToCartButton({ product, className, variant = "default", showI
   };
 
   return (
-    <Button 
+    <Button
       variant={variant} 
       className={cn("transition-all duration-300 active:scale-95", className)} 
       onClick={handleAddToCart}
       size={iconOnly ? "icon" : "default"}
+      disabled={disabled}
     >
       {showIcon && <ShoppingCart className={cn(iconOnly ? "w-5 h-5" : "w-4 h-4 mr-2")} />}
       {!iconOnly && "Add to Cart"}
