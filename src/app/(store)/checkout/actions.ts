@@ -9,6 +9,8 @@ interface CheckoutFormData {
   addressLine1: string;
   addressLine2?: string;
   city: string;
+  state: string;
+  postalCode: string;
   phone: string;
   paymentMethod: string;
 }
@@ -29,7 +31,8 @@ export async function processCheckout(
       shippingAddress: {
         address: formData.addressLine1,
         city: formData.city,
-        postalCode: "",
+        state: formData.state,
+        postalCode: formData.postalCode,
         country: "LK",
       },
       paymentMethod: formData.paymentMethod,
