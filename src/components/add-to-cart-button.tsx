@@ -18,22 +18,29 @@ interface AddToCartButtonProps {
   variant?: "default" | "outline" | "secondary" | "ghost" | "link";
   showIcon?: boolean;
   iconOnly?: boolean;
+  disabled?: boolean;
+  quantity?: number;
 }
 
-export function AddToCartButton({ product, className, variant = "default", showIcon = true, iconOnly = false }: AddToCartButtonProps) {
+export function AddToCartButton({ product, className, variant = "default", showIcon = true, iconOnly = false, disabled = false, quantity = 1 }: AddToCartButtonProps) {
   const addItem = useCartStore((state) => state.addItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const currentQuantity = useCartStore((state) => state.items.find((item) => item.id === product.id)?.quantity ?? 0);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigating if wrapped in a link area
     e.stopPropagation(); // Prevent bubbling up to parent clickable areas
     
-    addItem({
+    const item = {
       id: product.id,
       name: product.name,
       price: product.price,
       slug: product.slug,
       image_url: product.image_url,
-    });
+    };
+    const itemQuantity = Number.isFinite(quantity) ? Math.max(1, Math.floor(quantity)) : 1;
+    addItem(item);
+    if (itemQuantity > 1) updateQuantity(product.id, currentQuantity + itemQuantity);
     
     // Automatically open the cart sheet
     document.dispatchEvent(new CustomEvent('open-cart'));
@@ -44,11 +51,12 @@ export function AddToCartButton({ product, className, variant = "default", showI
   };
 
   return (
-    <Button 
+    <Button
       variant={variant} 
       className={cn("transition-all duration-300 active:scale-95", className)} 
       onClick={handleAddToCart}
       size={iconOnly ? "icon" : "default"}
+      disabled={disabled}
     >
       {showIcon && <ShoppingCart className={cn(iconOnly ? "w-5 h-5" : "w-4 h-4 mr-2")} />}
       {!iconOnly && "Add to Cart"}
