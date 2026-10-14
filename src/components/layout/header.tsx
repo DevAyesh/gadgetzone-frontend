@@ -1,21 +1,37 @@
 import Link from "next/link";
-import { ShoppingCart, User, Search, Menu, ChevronDown, Flame } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Menu, ChevronDown, Flame } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartSheet } from "@/components/cart-sheet";
-import { cn } from "@/lib/utils";
 import { SearchBar } from "@/components/search-bar";
+import { UserNav } from "@/components/layout/user-nav";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export async function Header() {
-  // Fetch categories from backend — returns [] if backend not yet available
   let categories: any[] = [];
   try {
     const res = await fetch(`${API_URL}/api/categories`, { next: { revalidate: 60 } });
-    if (res.ok) categories = await res.json();
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) categories = data;
+    }
   } catch {
     categories = [];
+  }
+
+  const defaultCategories = [
+    { id: 'smartphones', name: 'Smartphones', slug: 'smartphones' },
+    { id: 'laptops', name: 'Laptops', slug: 'laptops' },
+    { id: 'audio', name: 'Audio', slug: 'audio' },
+    { id: 'wearables', name: 'Wearables', slug: 'wearables' },
+    { id: 'cameras', name: 'Cameras', slug: 'cameras' },
+    { id: 'gaming', name: 'Gaming', slug: 'gaming' },
+    { id: 'accessories', name: 'Accessories', slug: 'accessories' },
+  ];
+
+  if (!categories || categories.length === 0) {
+    categories = defaultCategories;
   }
 
 
@@ -137,10 +153,7 @@ export async function Header() {
           <div className="flex items-center gap-3">
             <SearchBar />
             
-            <Link href="/login" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "rounded-full text-foreground hover:bg-muted")}>
-              <User className="h-5 w-5" />
-              <span className="sr-only">Account</span>
-            </Link>
+            <UserNav />
 
             <CartSheet />
           </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { GlobalErrorHandler } from "@/components/global-error-handler";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning className={`${outfit.variable} font-sans antialiased min-h-screen flex flex-col`}>
+          <GlobalErrorHandler />
           {children}
           <Toaster />
       </body>

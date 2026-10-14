@@ -4,7 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart-store";
-import { cn, formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 

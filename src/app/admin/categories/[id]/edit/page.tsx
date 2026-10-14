@@ -1,21 +1,26 @@
-// @ts-nocheck
-const mq = { select:function(){return this}, eq:function(){return this}, order:function(){return this}, limit:function(){return this}, single:async function(){return {data:null,error:null}}, ilike:function(){return this}, returns:function(){return this}, then:function(cb: any){cb({data:[],error:null})} };
-const createClient = async () => ({ from: () => mq, insert: () => mq, update: () => mq, delete: () => mq, auth: { getUser: async () => ({ data: { user: null } }), signOut: async () => {} } }) as any;
-const createSupabaseClient = createClient;
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { updateCategory } from "../../actions";
 import { notFound } from "next/navigation";
+import { getCategoryById } from "@/lib/api";
+
+export const dynamic = 'force-dynamic';
 
 export default async function EditCategoryPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const supabase = await createClient();
-  const { data: category } = await supabase.from("categories").select("*").eq("id", params.id).single();
+  let category: any = null;
+  try {
+    category = await getCategoryById(params.id, { cache: "no-store" });
+  } catch {
+    category = null;
+  }
 
   if (!category) {
     notFound();
   }
+
+  const categoryId = category.id || category._id;
 
   return (
     <div className="space-y-8 max-w-xl mx-auto">
@@ -32,7 +37,7 @@ export default async function EditCategoryPage(props: { params: Promise<{ id: st
         </CardHeader>
         <CardContent>
           <form action={updateCategory} className="space-y-6">
-            <input type="hidden" name="id" value={category.id} />
+            <input type="hidden" name="id" value={categoryId} />
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="name">Category Name</label>
               <input 

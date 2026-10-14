@@ -2,20 +2,25 @@
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const data = [
-  { name: "Jan", total: 12000 },
-  { name: "Feb", total: 15000 },
-  { name: "Mar", total: 18000 },
-  { name: "Apr", total: 22000 },
-  { name: "May", total: 25000 },
-  { name: "Jun", total: 31000 },
-  { name: "Jul", total: 38000 },
+interface RevenueChartProps {
+  data?: Array<{ name: string; total: number }>;
+}
+
+const defaultData = [
+  { name: "Jan", total: 0 },
+  { name: "Feb", total: 0 },
+  { name: "Mar", total: 0 },
+  { name: "Apr", total: 0 },
+  { name: "May", total: 0 },
+  { name: "Jun", total: 0 },
 ];
 
-export function RevenueChart() {
+export function RevenueChart({ data }: RevenueChartProps) {
+  const chartData = data && data.length > 0 ? data : defaultData;
+
   return (
     <ResponsiveContainer width="100%" height={350}>
-      <LineChart data={data}>
+      <LineChart data={chartData}>
         <XAxis 
           dataKey="name" 
           stroke="#888888" 
@@ -28,11 +33,12 @@ export function RevenueChart() {
           fontSize={12}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value) => `$${value}`}
+          tickFormatter={(value) => `Rs. ${(value / 100).toLocaleString()}`}
         />
         <Tooltip 
           contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
           itemStyle={{ color: 'hsl(var(--primary))' }}
+          formatter={(value: any) => [`Rs. ${(Number(value) / 100).toLocaleString()}`, "Revenue"]}
         />
         <Line 
           type="monotone" 

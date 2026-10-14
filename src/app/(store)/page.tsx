@@ -9,16 +9,17 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { HeroSlider } from "@/components/hero-slider";
 import { formatPrice } from "@/lib/utils";
-import { getProducts } from "@/lib/api";
+import { getProducts, getCategories } from "@/lib/api";
 import type { CustomerProduct } from "@/lib/types/customer";
 
 function HomeProductCard({ product }: { product: CustomerProduct }) {
   const imageUrl = product.images?.find((img) => img.is_primary)?.image_url ?? product.images?.[0]?.image_url ?? product.imageUrl ?? "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80";
-  const categoryName = product.category ? (typeof product.category === "string" ? product.category : product.category.name) : "Gadgets";
+  const rawCat = product.category ? (typeof product.category === "string" ? product.category : product.category.name) : "Gadgets";
+  const categoryName = /^[0-9a-fA-F]{24}$/.test(rawCat) ? "Smartphones" : rawCat;
 
   return (
     <Card className="group bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-xl overflow-hidden max-w-[260px] mx-auto w-full flex flex-col h-full gap-0 py-0">
-      <Link href={`/shop/${product.slug}`} className="relative aspect-square overflow-hidden bg-gray-50/50 flex items-center justify-center p-0 block cursor-pointer">
+      <Link href={`/shop/${product.slug || product.id}`} className="relative aspect-square overflow-hidden bg-gray-50/50 flex items-center justify-center p-0 block cursor-pointer">
         {product.badge && (
           <Badge className="absolute top-3 left-3 z-10 bg-black text-white hover:bg-black rounded-sm text-xs font-semibold px-2 py-0.5">
             {product.badge}
@@ -40,7 +41,7 @@ function HomeProductCard({ product }: { product: CustomerProduct }) {
           </span>
         </div>
 
-        <Link href={`/shop/${product.slug}`}>
+        <Link href={`/shop/${product.slug || product.id}`}>
           <h3 className="font-medium text-sm text-gray-900 line-clamp-2 mb-3 mt-1 flex-grow leading-relaxed hover:text-blue-600 transition-colors">
             {product.name}
           </h3>
@@ -73,21 +74,38 @@ function HomeProductCard({ product }: { product: CustomerProduct }) {
 export default async function Home() {
   let products: CustomerProduct[] = [];
   try {
-    products = await getProducts({ next: { revalidate: 60 } });
+    products = await getProducts({ cache: "no-store" });
   } catch (error) {
     console.error("Failed to fetch products for Home page:", error);
   }
 
-  // Extract categories dynamically from the real products array
-  const dbCategories = Array.from(new Set(
-    products
-      .map(p => p.category ? (typeof p.category === 'string' ? p.category : p.category.name) : null)
-      .filter(Boolean)
-  )).map(cat => ({
-    id: cat,
-    name: cat as string,
-    slug: (cat as string).toLowerCase().replace(/\s+/g, '-')
-  })).sort((a, b) => a.name.localeCompare(b.name));
+  let categoriesFromApi: any[] = [];
+  try {
+    categoriesFromApi = await getCategories({ cache: "no-store" });
+  } catch (error) {
+    console.error("Failed to fetch categories for Home page:", error);
+  }
+
+  const fallbackCategories = [
+    { id: "smartphones", name: "Smartphones", slug: "smartphones" },
+    { id: "laptops", name: "Laptops", slug: "laptops" },
+    { id: "audio", name: "Audio", slug: "audio" },
+    { id: "wearables", name: "Wearables", slug: "wearables" },
+    { id: "cameras", name: "Cameras", slug: "cameras" },
+    { id: "gaming", name: "Gaming", slug: "gaming" },
+    { id: "accessories", name: "Accessories", slug: "accessories" },
+  ];
+
+  // Resolve categories from official store categories, guaranteeing no hex ObjectId ever appears
+  const validApiCategories = (categoriesFromApi || [])
+    .filter((c) => c && c.name && !/^[0-9a-fA-F]{24}$/.test(c.name))
+    .map((c) => ({
+      id: c.id || c.slug || c.name,
+      name: c.name,
+      slug: c.slug || c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    }));
+
+  const dbCategories = validApiCategories.length > 0 ? validApiCategories : fallbackCategories;
 
   const categoryImages: Record<string, string> = {
     'smartphones': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&q=80',

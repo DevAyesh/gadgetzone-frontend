@@ -35,6 +35,14 @@ export default function NewCollectionPage() {
                 placeholder="e.g. apple-products"
               />
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="description">Description (Optional)</label>
+              <input 
+                id="description" name="description" type="text"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="e.g. Premium curated Apple accessories"
+              />
+            </div>
 
             <Button type="submit" className="w-full">Save Collection</Button>
           </form>

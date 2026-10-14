@@ -10,20 +10,22 @@ export async function login(formData: FormData) {
   const password = formData.get("password") as string;
   const next = (formData.get("next") as string) || "/";
 
-  const res = await fetch(`${API_URL}/api/users/login`, {
+  const res = await fetch(`${API_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
 
   if (!res.ok) {
-    const error = await res.json();
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    const error = await res.json().catch(() => ({}));
+    redirect(`/login?error=${encodeURIComponent(error.message || "Login failed")}`);
   }
 
-  const data = await res.json();
-  // Token is stored client-side via localStorage in api.ts
-  // For server actions, redirect after login
+  const data = await res.json().catch(() => ({}));
+  if (data.requireOtp) {
+    redirect(`/login?otpRequired=true&email=${encodeURIComponent(email)}`);
+  }
+
   revalidatePath("/", "layout");
   redirect(next);
 }
@@ -33,23 +35,22 @@ export async function signup(formData: FormData) {
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
 
-  const res = await fetch(`${API_URL}/api/users/register`, {
+  const res = await fetch(`${API_URL}/api/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, password }),
   });
 
   if (!res.ok) {
-    const error = await res.json();
-    redirect(`/register?error=${encodeURIComponent(error.message)}`);
+    const error = await res.json().catch(() => ({}));
+    redirect(`/register?error=${encodeURIComponent(error.message || "Registration failed")}`);
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect("/login?verifyRequired=true");
 }
 
 export async function logout() {
-  // JWT logout is handled client-side by clearing localStorage token
   revalidatePath("/", "layout");
   redirect("/");
 }

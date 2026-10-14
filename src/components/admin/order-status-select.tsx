@@ -3,19 +3,21 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { updateOrderStatus } from "@/app/admin/orders/actions";
+import { useAuthStore } from "@/lib/store/auth-store";
 import { Loader2 } from "lucide-react";
 
 interface OrderStatusSelectProps {
   orderId: string;
   currentStatus: string;
+  onStatusUpdated?: (newStatus: string) => void;
 }
 
-export function OrderStatusSelect({ orderId, currentStatus }: OrderStatusSelectProps) {
+export function OrderStatusSelect({ orderId, currentStatus, onStatusUpdated }: OrderStatusSelectProps) {
   const [isPending, setIsPending] = useState(false);
   const [status, setStatus] = useState(currentStatus);
 
   const getStatusColor = (s: string) => {
-    switch(s) {
+    switch(s?.toLowerCase()) {
       case 'pending': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
       case 'processing': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
       case 'shipped': return 'text-purple-500 bg-purple-500/10 border-purple-500/20';
@@ -30,17 +32,18 @@ export function OrderStatusSelect({ orderId, currentStatus }: OrderStatusSelectP
     setIsPending(true);
     
     try {
-      const result = await updateOrderStatus(orderId, newStatus);
+      const token = useAuthStore.getState().token;
+      const result = await updateOrderStatus(orderId, newStatus, {}, token);
       if (result.success) {
         setStatus(newStatus);
-        toast.success("Order status updated");
+        toast.success(`Order marked as ${newStatus}`);
+        if (onStatusUpdated) onStatusUpdated(newStatus);
       } else {
         toast.error("Failed to update status", { description: result.error });
-        // Revert to currentStatus on failure (since UI is controlled by state temporarily)
         e.target.value = status;
       }
-    } catch (error: any) {
-      toast.error("An unexpected error occurred");
+    } catch {
+      toast.error("An unexpected error occurred while updating status");
       e.target.value = status;
     } finally {
       setIsPending(false);

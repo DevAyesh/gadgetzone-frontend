@@ -29,7 +29,7 @@ export function ProductCard({ product }: { product: CustomerProduct }) {
   return (
     <Card className="group overflow-hidden gap-0 py-0 transition-shadow duration-300 hover:shadow-lg">
       <Link
-        href={`/shop/${product.slug}`}
+        href={`/shop/${product.slug || product.id}`}
         className="relative block aspect-square overflow-hidden bg-muted"
         aria-label={`View details for ${product.name}`}
       >
@@ -56,7 +56,7 @@ export function ProductCard({ product }: { product: CustomerProduct }) {
 
       <CardContent className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
         <div className="space-y-1.5">
-          <Link href={`/shop/${product.slug}`} className="block">
+          <Link href={`/shop/${product.slug || product.id}`} className="block">
             <h2 className="line-clamp-2 min-h-12 font-semibold leading-6 transition-colors hover:text-primary">
               {product.name}
             </h2>
@@ -78,7 +78,7 @@ export function ProductCard({ product }: { product: CustomerProduct }) {
             {isInStock ? "In stock" : "Out of stock"}
           </span>
           <div className="flex items-center justify-between gap-3">
-            <Link href={`/shop/${product.slug}`} className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+            <Link href={`/shop/${product.slug || product.id}`} className="text-sm font-medium text-primary underline-offset-4 hover:underline">
               View details
             </Link>
             <AddToCartButton

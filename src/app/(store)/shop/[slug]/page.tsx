@@ -12,9 +12,18 @@ import { formatPrice } from "@/lib/utils";
 
 const getCategory = (product: CustomerProduct) => {
   if (!product.category) return null;
-  return typeof product.category === "string"
-    ? { name: product.category, slug: product.category }
-    : product.category;
+  if (typeof product.category === "object" && product.category?.name) {
+    return {
+      name: product.category.name,
+      slug: product.category.slug || product.category.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    };
+  }
+  const catStr = String(product.category || "").trim();
+  if (!catStr) return null;
+  return {
+    name: catStr,
+    slug: catStr.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+  };
 };
 
 const getPrimaryImage = (product: CustomerProduct) =>

@@ -19,10 +19,14 @@ const getProductCategory = (product: CustomerProduct): CategoryOption | null => 
   if (!product.category) return null;
 
   if (typeof product.category === "string") {
-    return { label: product.category, value: product.category };
+    const name = product.category.trim();
+    return { label: name, value: name.toLowerCase().replace(/[^a-z0-9]+/g, "-") };
   }
 
-  return { label: product.category.name, value: product.category.slug };
+  return {
+    label: product.category.name,
+    value: product.category.slug || product.category.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+  };
 };
 
 const parsePriceToMinorUnits = (value: string) => {
@@ -32,9 +36,15 @@ const parsePriceToMinorUnits = (value: string) => {
   return Number.isFinite(price) && price >= 0 ? Math.round(price * 100) : null;
 };
 
-export function ShopProductListing({ products }: { products: CustomerProduct[] }) {
+export function ShopProductListing({
+  products,
+  initialCategory = "",
+}: {
+  products: CustomerProduct[];
+  initialCategory?: string;
+}) {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(initialCategory);
   const [minimumPrice, setMinimumPrice] = useState("");
   const [maximumPrice, setMaximumPrice] = useState("");
 
@@ -58,9 +68,13 @@ export function ShopProductListing({ products }: { products: CustomerProduct[] }
   const filteredProducts = useMemo(
     () =>
       products.filter((product) => {
+        const prodCat = getProductCategory(product);
         const matchesSearch =
           !normalizedSearch || product.name.toLocaleLowerCase().includes(normalizedSearch);
-        const matchesCategory = !category || getProductCategory(product)?.value === category;
+        const matchesCategory =
+          !category ||
+          prodCat?.value.toLowerCase() === category.toLowerCase() ||
+          prodCat?.label.toLowerCase() === category.toLowerCase();
         const matchesMinimumPrice =
           minimumPriceInMinorUnits === null || product.price >= minimumPriceInMinorUnits;
         const matchesMaximumPrice =
