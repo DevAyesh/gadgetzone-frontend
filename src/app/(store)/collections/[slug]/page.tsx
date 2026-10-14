@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { formatPrice } from "@/lib/utils";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 const fallbackProducts = [
   { name: "iPhone 15 Pro Max", price: 149999, old_price: 164999, badge: "HOT", slug: "iphone-15-pro-max", category: { name: "Smartphones" }, images: [{ image_url: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&q=80", is_primary: true }] },
