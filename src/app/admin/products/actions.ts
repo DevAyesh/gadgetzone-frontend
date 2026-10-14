@@ -1,11 +1,25 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { deleteProductAdmin } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+async function resolveToken(token?: string | null, formData?: FormData): Promise<string | null> {
+  if (token) return token;
+  const formToken = formData?.get("token") as string | null;
+  if (formToken) return formToken;
+  try {
+    const cookieStore = await cookies();
+    return cookieStore.get("token")?.value || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function addProduct(formData: FormData, token?: string | null) {
-  const tokenVal = token || (formData.get("token") as string | null);
+  const tokenVal = await resolveToken(token, formData);
 
   const name = formData.get("name") as string;
   const category_id = formData.get("category_id") as string;
@@ -75,25 +89,13 @@ export async function addProduct(formData: FormData, token?: string | null) {
 }
 
 export async function deleteProduct(formData: FormData, token?: string | null) {
+  const tokenVal = await resolveToken(token, formData);
   const id = formData.get("id") as string;
-  const tokenVal = token || (formData.get("token") as string | null);
-  if (!id) return;
-
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-  };
-  if (tokenVal) {
-    headers["Authorization"] = `Bearer ${tokenVal}`;
+  if (!id) {
+    throw new Error("Product ID is required for deletion");
   }
 
-  try {
-    await fetch(`${API_URL}/api/products/admin/${encodeURIComponent(id)}`, {
-      method: "DELETE",
-      headers,
-    });
-  } catch (err) {
-    console.error("Delete product error:", err);
-  }
+  await deleteProductAdmin(id, tokenVal);
 
   revalidatePath("/admin/products");
   revalidatePath("/shop");
@@ -101,8 +103,8 @@ export async function deleteProduct(formData: FormData, token?: string | null) {
 }
 
 export async function updateProduct(formData: FormData, token?: string | null) {
+  const tokenVal = await resolveToken(token, formData);
   const id = formData.get("id") as string;
-  const tokenVal = token || (formData.get("token") as string | null);
   if (!id) {
     throw new Error("Product ID is required for update");
   }

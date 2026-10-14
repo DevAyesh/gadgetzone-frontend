@@ -1,9 +1,10 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { Plus, Edit } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getCategories } from "@/lib/api";
+import { AdminDeleteButton } from "@/components/admin/admin-delete-button";
 import { deleteCategory } from "./actions";
 
 export const dynamic = 'force-dynamic';
@@ -49,12 +50,12 @@ export default async function AdminCategoriesPage() {
                       <Link href={`/admin/categories/${id}/edit`} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}>
                         <Edit className="h-4 w-4" />
                       </Link>
-                      <form action={deleteCategory} className="inline-block">
-                        <input type="hidden" name="id" value={id} />
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" type="submit">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </form>
+                      <AdminDeleteButton
+                        id={id}
+                        name={cat.name}
+                        action={deleteCategory}
+                        title="Delete category"
+                      />
                     </TableCell>
                   </TableRow>
                 );

@@ -1,9 +1,10 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { Plus, Edit } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getCollections } from "@/lib/api";
+import { AdminDeleteButton } from "@/components/admin/admin-delete-button";
 import { deleteCollection } from "./actions";
 
 export const dynamic = 'force-dynamic';
@@ -47,12 +48,12 @@ export default async function AdminCollectionsPage() {
                       <Link href={`/admin/collections/${id}/edit`} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}>
                         <Edit className="h-4 w-4" />
                       </Link>
-                      <form action={deleteCollection} className="inline-block">
-                        <input type="hidden" name="id" value={id} />
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" type="submit">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </form>
+                      <AdminDeleteButton
+                        id={id}
+                        name={col.name}
+                        action={deleteCollection}
+                        title="Delete collection"
+                      />
                     </TableCell>
                   </TableRow>
                 );
