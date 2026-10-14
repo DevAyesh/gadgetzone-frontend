@@ -1,11 +1,12 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit } from "lucide-react";
 import Link from "next/link";
 import { cn, formatPrice } from "@/lib/utils";
 import { AddProductDialog } from "./add-product-dialog";
 import { DataTableToolbar } from "@/components/admin/data-table-toolbar";
+import { AdminDeleteButton } from "@/components/admin/admin-delete-button";
 import { getProducts, getCategories, getCollections } from "@/lib/api";
 import { deleteProduct } from "./actions";
 
@@ -145,12 +146,12 @@ export default async function AdminProductsPage(props: {
                       <Link href={`/admin/products/${product.id || product._id}/edit`} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}>
                         <Edit className="h-4 w-4" />
                       </Link>
-                      <form action={deleteProduct} className="inline-block">
-                        <input type="hidden" name="id" value={product.id || product._id} />
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" type="submit">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </form>
+                      <AdminDeleteButton
+                        id={product.id || product._id}
+                        name={product.name}
+                        action={deleteProduct}
+                        title="Delete product"
+                      />
                     </TableCell>
                   </TableRow>
                 );

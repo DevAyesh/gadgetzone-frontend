@@ -395,15 +395,28 @@ export const updateProductAdmin = (
     body: typeof FormData !== 'undefined' && data instanceof FormData ? data : JSON.stringify(data),
   });
 
-export const deleteProductAdmin = (id: string) =>
-  apiFetch<{ success: boolean; message: string }>(`/api/products/admin/${encodeURIComponent(id)}`, {
+export const deleteProductAdmin = (id: string, token?: string | null) => {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return apiFetch<{ success: boolean; message: string }>(`/api/products/admin/${encodeURIComponent(id)}`, {
     method: 'DELETE',
+    headers,
   });
+};
 
 // ─── Admin User Management Endpoints ────────────────────────────────────────
 
 export const getAllUsersAdmin = () =>
   apiFetch<{ success: boolean; data: UserProfile[] }>('/api/users');
+
+export const deleteUserAdmin = (id: string, token?: string | null) => {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return apiFetch<{ success: boolean; message: string }>(`/api/users/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers,
+  });
+};
 
 export const updateUserStatusAdmin = (id: string, isActive: boolean) =>
   apiFetch<{ success: boolean; message: string; data: UserProfile }>(`/api/users/${encodeURIComponent(id)}/status`, {

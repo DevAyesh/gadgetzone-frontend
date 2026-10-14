@@ -27,6 +27,7 @@ import {
   updateUserStatusAdmin,
   updateUserRoleAdmin,
   createAdminUser,
+  deleteUserAdmin,
   ApiError,
 } from "@/lib/api";
 import { useAuthStore } from "@/lib/store/auth-store";
@@ -46,6 +47,7 @@ import {
   User,
   CheckCircle2,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -258,6 +260,31 @@ export default function AdminCustomersPage() {
           ? err.message
           : "Failed to update Super Admin status."
       );
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleDeleteUser = async (user: UserProfile) => {
+    if (user._id === currentUser?._id || Boolean(user.userId && user.userId === currentUser?.userId)) {
+      toast.error("You cannot delete your own account.");
+      return;
+    }
+    if (user.isSuperAdmin && !currentUser?.isSuperAdmin) {
+      toast.error("Only Super Admins can delete a Super Admin account.");
+      return;
+    }
+    if (!confirm(`Are you sure you want to delete user "${user.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setActionLoadingId(user._id);
+    try {
+      await deleteUserAdmin(user._id);
+      toast.success(`User "${user.name}" was deleted successfully.`);
+      setUsers((prev) => prev.filter((u) => u._id !== user._id));
+    } catch (err: unknown) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to delete user.");
     } finally {
       setActionLoadingId(null);
     }
@@ -762,6 +789,24 @@ export default function AdminCustomersPage() {
                               <UserCheck className="h-3.5 w-3.5 mr-1" /> Activate
                             </>
                           )}
+                        </Button>
+
+                        {/* Delete User Account */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={isOperating || !canModifyTarget}
+                          onClick={() => handleDeleteUser(u)}
+                          className="text-xs h-8 text-destructive hover:bg-destructive/10 px-2"
+                          title={
+                            isSelf
+                              ? "Cannot delete own account"
+                              : !canModifyTarget
+                              ? "Only Super Admins can delete Super Admin accounts"
+                              : "Delete user account"
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>
