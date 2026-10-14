@@ -6,7 +6,7 @@ import { CartSheet } from "@/components/cart-sheet";
 import { SearchBar } from "@/components/search-bar";
 import { UserNav } from "@/components/layout/user-nav";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 export async function Header() {
   let categories: any[] = [];
