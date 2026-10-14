@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaCcAmex, FaCcApplePay, FaCcDinersClub, FaCcDiscover, FaCcJcb, FaCcMastercard, FaCcVisa, FaCcStripe, FaApple } from "react-icons/fa";
+import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaApple } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Send } from "lucide-react";
 

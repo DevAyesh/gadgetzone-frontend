@@ -1,16 +1,59 @@
-// @ts-nocheck
-const mq = { select:function(){return this}, eq:function(){return this}, order:function(){return this}, limit:function(){return this}, single:async function(){return {data:null,error:null}}, ilike:function(){return this}, returns:function(){return this}, then:function(cb: any){cb({data:[],error:null})} };
-const createClient = async () => ({ from: () => mq, insert: () => mq, update: () => mq, delete: () => mq, auth: { getUser: async () => ({ data: { user: null } }), signOut: async () => {} } }) as any;
-const createSupabaseClient = createClient;
+"use client";
+
+import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import { addProduct } from "../actions";
+import { useAuthStore } from "@/lib/store/auth-store";
+import { ProductImageUploader } from "@/components/admin/product-image-uploader";
+import { toast } from "sonner";
 
-export default async function NewProductPage() {
-  const supabase = await createClient();
-  const { data: categories } = await supabase.from("categories").select("*").order("name");
+const categories = [
+  { id: "Smartphones", name: "Smartphones" },
+  { id: "Laptops", name: "Laptops" },
+  { id: "Audio", name: "Audio" },
+  { id: "Wearables", name: "Wearables" },
+  { id: "Cameras", name: "Cameras" },
+  { id: "Gaming", name: "Gaming" },
+  { id: "Accessories", name: "Accessories" },
+];
+
+export default function NewProductPage() {
+  const router = useRouter();
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+  const [imageUrl, setImageUrl] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+      const token = useAuthStore.getState().token;
+
+      // Append staged files from device
+      stagedFiles.forEach((file) => {
+        formData.append("images", file);
+      });
+
+      if (imageUrl) {
+        formData.set("image_url", imageUrl);
+      }
+
+      await addProduct(formData, token);
+      toast.success("Product created successfully!");
+      router.push("/admin/products");
+      router.refresh();
+    } catch (err: any) {
+      console.error("Product creation error:", err);
+      toast.error(err.message || "Failed to create product");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
@@ -26,7 +69,7 @@ export default async function NewProductPage() {
           <CardTitle>Product Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={addProduct} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium" htmlFor="name">Product Name</label>
@@ -37,12 +80,16 @@ export default async function NewProductPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="slug">URL Slug</label>
-                <input 
-                  id="slug" name="slug" required type="text"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  placeholder="e.g. iphone-16-pro"
-                />
+                <label className="text-sm font-medium" htmlFor="category">Category</label>
+                <select 
+                  id="category" name="category" required
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="none">Select Category...</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
               </div>
               
               <div className="space-y-2">
@@ -62,20 +109,7 @@ export default async function NewProductPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="category_id">Category</label>
-                <select 
-                  id="category_id" name="category_id" required
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="none">Select Category...</option>
-                  {categories?.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-medium" htmlFor="badge">Product Badge</label>
                 <select 
                   id="badge" name="badge" 
@@ -89,14 +123,12 @@ export default async function NewProductPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="image_url">Image URL</label>
-              <input 
-                id="image_url" name="image_url" type="url"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                placeholder="https://images.unsplash.com/..."
-              />
-            </div>
+            <ProductImageUploader
+              stagedFiles={stagedFiles}
+              onStagedFilesChange={setStagedFiles}
+              imageUrl={imageUrl}
+              onImageUrlChange={setImageUrl}
+            />
 
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="description">Description</label>
@@ -107,7 +139,9 @@ export default async function NewProductPage() {
               />
             </div>
 
-            <Button type="submit" className="w-full">Save Product</Button>
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? "Saving Product..." : "Save Product"}
+            </Button>
           </form>
         </CardContent>
       </Card>

@@ -1,16 +1,21 @@
-// @ts-nocheck
-const mq = { select:function(){return this}, eq:function(){return this}, order:function(){return this}, limit:function(){return this}, single:async function(){return {data:null,error:null}}, ilike:function(){return this}, returns:function(){return this}, then:function(cb: any){cb({data:[],error:null})} };
-const createClient = async () => ({ from: () => mq, insert: () => mq, update: () => mq, delete: () => mq, auth: { getUser: async () => ({ data: { user: null } }), signOut: async () => {} } }) as any;
-const createSupabaseClient = createClient;
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { getCollections } from "@/lib/api";
+import { deleteCollection } from "./actions";
+
+export const dynamic = 'force-dynamic';
 
 export default async function AdminCollectionsPage() {
-  const supabase = await createClient();
-  const { data: collections } = await supabase.from("collections").select("*").order("name");
+  let collections: any[] = [];
+  try {
+    collections = await getCollections({ cache: "no-store" });
+  } catch (err) {
+    console.warn("Error fetching collections:", err);
+    collections = [];
+  }
 
   return (
     <div className="space-y-8">
@@ -32,28 +37,26 @@ export default async function AdminCollectionsPage() {
           </TableHeader>
           <TableBody>
             {collections && collections.length > 0 ? (
-              collections.map((col) => (
-                <TableRow key={col.id}>
-                  <TableCell className="font-medium">{col.name}</TableCell>
-                  <TableCell>{col.slug}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Link href={`/admin/collections/${col.id}/edit`} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}>
-                      <Edit className="h-4 w-4" />
-                    </Link>
-                    <form action={async () => {
-                      "use server";
-                      const { deleteCollection } = await import("./actions");
-                      const formData = new FormData();
-                      formData.append("id", col.id);
-                      await deleteCollection(formData);
-                    }} className="inline-block">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" type="submit">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </form>
-                  </TableCell>
-                </TableRow>
-              ))
+              collections.map((col) => {
+                const id = col.id || col._id;
+                return (
+                  <TableRow key={id}>
+                    <TableCell className="font-medium">{col.name}</TableCell>
+                    <TableCell>{col.slug}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Link href={`/admin/collections/${id}/edit`} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}>
+                        <Edit className="h-4 w-4" />
+                      </Link>
+                      <form action={deleteCollection} className="inline-block">
+                        <input type="hidden" name="id" value={id} />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" type="submit">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </form>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={3} className="h-24 text-center">

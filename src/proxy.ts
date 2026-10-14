@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 // Middleware proxy — Supabase removed, JWT auth handled by backend
 // TODO: Add JWT token validation here if needed for protected routes
-export async function proxy(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function proxy(_request: NextRequest) {
   return NextResponse.next();
 }
 

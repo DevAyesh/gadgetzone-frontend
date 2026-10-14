@@ -1,7 +1,11 @@
 import { ShopProductListing } from "@/components/shop-product-listing";
 import { getProducts } from "@/lib/api";
 
-export default async function ShopPage() {
+export default async function ShopPage(props: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const initialCategory = typeof searchParams?.category === "string" ? searchParams.category : "";
   const products = await getProducts({ cache: "no-store" });
 
   return (
@@ -12,7 +16,7 @@ export default async function ShopPage() {
           <p className="mt-2 text-muted-foreground">Explore the latest tech from GadgetZone.</p>
         </div>
       </div>
-      <ShopProductListing products={products} />
+      <ShopProductListing products={products} initialCategory={initialCategory} />
     </div>
   );
 }

@@ -1,152 +1,236 @@
-// @ts-nocheck
-const mq = { select:function(){return this}, eq:function(){return this}, order:function(){return this}, limit:function(){return this}, single:async function(){return {data:null,error:null}}, ilike:function(){return this}, returns:function(){return this}, then:function(cb: any){cb({data:[],error:null})} };
-const createClient = async () => ({ from: () => mq, insert: () => mq, update: () => mq, delete: () => mq, auth: { getUser: async () => ({ data: { user: null } }), signOut: async () => {} } }) as any;
-const createSupabaseClient = createClient;
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Truck, XCircle } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import Image from "next/image";
 import { OrderStatusUpdate } from "@/components/admin/order-status-update";
+import { getOrderById, ApiError } from "@/lib/api";
+import type { Order } from "@/lib/types/order";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
+export default function AdminOrderDetailsPage() {
+  const params = useParams();
+  const orderId = typeof params?.id === "string" ? params.id : "";
 
-export default async function AdminOrderDetailsPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const orderId = params.id;
-  
-  // Create an admin client to bypass all RLS for the admin dashboard
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
-    : await createClient();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch order with user info and items
-  const { data: order, error } = await supabase
-    .from("orders")
-    .select(`
-      *,
-      profiles(first_name, last_name, phone),
-      order_items(
-        id,
-        quantity,
-        price,
-        products(
-          name,
-          images:product_images(image_url, is_primary)
-        )
-      )
-    `)
-    .eq("id", orderId)
-    .single();
+  const fetchOrder = useCallback(async () => {
+    if (!orderId) return;
+    setLoading(true);
+    try {
+      const res = await getOrderById(orderId);
+      if (res.data) {
+        setOrder(res.data);
+      }
+    } catch (err: any) {
+      console.warn("Failed to fetch order details:", err);
+      toast.error(err instanceof ApiError ? err.message : "Failed to fetch order details.");
+    } finally {
+      setLoading(false);
+    }
+  }, [orderId]);
 
-  if (error || !order) {
-    console.error("Order fetch error:", error);
-    return notFound();
+  useEffect(() => {
+    fetchOrder();
+  }, [fetchOrder]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Loading order details...</p>
+      </div>
+    );
   }
 
-  const customerName = order.profiles 
-    ? `${order.profiles.first_name || ''} ${order.profiles.last_name || ''}`.trim() || 'Guest'
-    : 'Guest';
-  
-  const customerEmail = order.profiles?.email || 'Guest';
+  if (!order) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto py-12 text-center">
+        <h2 className="text-2xl font-bold">Order Not Found</h2>
+        <p className="text-muted-foreground">The requested order does not exist or was removed.</p>
+        <Link href="/admin/orders">
+          <Button variant="outline" className="gap-2">
+            <ArrowLeft className="h-4 w-4" /> Back to Orders
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
-  // Format Date (e.g. 10 Jul 2026, 02:56 PM)
-  const orderDate = new Date(order.created_at).toLocaleString('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
+  const customerName = (typeof order.user === "object" && order.user?.name)
+    || order.shippingAddress?.name
+    || "Customer";
+  const customerEmail = (typeof order.user === "object" && order.user?.email)
+    || order.shippingAddress?.email
+    || "N/A";
+  const customerPhone = order.shippingAddress?.phone || "N/A";
+
+  const orderDate = new Date(order.createdAt).toLocaleString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   });
+
+  let currentStatus = "pending";
+  if (order.isCancelled) currentStatus = "cancelled";
+  else if (order.isDelivered) currentStatus = "delivered";
+  else if (order.isShipped) currentStatus = "shipped";
+  else if (order.isPaid) currentStatus = "processing";
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-20">
-      
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/50 pb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          Order <span className="text-blue-600">{order.order_number}</span>
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            Order <span className="text-primary">{order.orderNumber || `ORD-${order._id}`}</span>
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">Placed on {orderDate}</p>
+        </div>
+
         <Link href="/admin/orders">
-          <Button variant="outline" size="sm" className="bg-muted/50 gap-2 font-medium">
-            <ArrowLeft className="h-4 w-4" /> Back
+          <Button variant="outline" size="sm" className="bg-muted/50 gap-2 font-medium rounded-full">
+            <ArrowLeft className="h-4 w-4" /> Back to Orders
           </Button>
         </Link>
       </div>
 
-      {/* 3-Column Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-4">
-        <div>
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Customer</h3>
-          <p className="font-semibold text-foreground">{customerName}</p>
-          <p className="text-sm text-muted-foreground mt-1">{customerEmail}</p>
+      {/* Tracking Callout */}
+      {order.trackingInfo && (
+        <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-500/20 text-purple-600 dark:text-purple-300">
+              <Truck className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-foreground">
+                Shipped via {order.trackingInfo.carrier}
+              </p>
+              <p className="text-xs font-mono text-muted-foreground">
+                Tracking Number: <span className="font-bold text-foreground">{order.trackingInfo.trackingNumber}</span>
+              </p>
+            </div>
+          </div>
+          {order.trackingInfo.shippedAt && (
+            <span className="text-xs text-muted-foreground">
+              Dispatched at {new Date(order.trackingInfo.shippedAt).toLocaleString()}
+            </span>
+          )}
         </div>
-        
+      )}
+
+      {/* 3-Column Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 glass-card p-6 rounded-2xl border border-border/50">
         <div>
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Shipping Address</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {order.notes?.replace('Shipping Info: ', '') || 'No shipping details provided.'}
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Customer</h3>
+          <p className="font-semibold text-foreground text-sm">{customerName}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{customerEmail}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Phone: {customerPhone}</p>
+        </div>
+
+        <div>
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Shipping Address</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {order.shippingAddress?.address || order.shippingAddress?.addressLine1 || "N/A"}<br />
+            {order.shippingAddress?.city}, {order.shippingAddress?.state} {order.shippingAddress?.postalCode}<br />
+            {order.shippingAddress?.country || "Sri Lanka"}
           </p>
         </div>
 
         <div>
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Payment</h3>
-          <p className="font-semibold capitalize text-foreground">{order.payment_method}</p>
-          <p className="text-sm text-muted-foreground mt-1">{orderDate}</p>
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Payment Details</h3>
+          <p className="font-semibold capitalize text-foreground text-sm flex items-center gap-2">
+            {order.paymentMethod}
+            {order.isPaid ? (
+              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px]">
+                Paid
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 text-[10px]">
+                Unpaid
+              </Badge>
+            )}
+          </p>
+          {order.paymentResult?.payhere_payment_id && (
+            <p className="text-[11px] font-mono text-muted-foreground mt-1">
+              PayHere ID: {order.paymentResult.payhere_payment_id}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Items Table */}
-      <div className="mt-8">
+      <div className="glass-card rounded-2xl border border-border/50 overflow-hidden">
+        <div className="p-4 border-b border-border/50 bg-muted/30">
+          <h2 className="text-sm font-semibold">Ordered Items ({order.orderItems?.length || 0})</h2>
+        </div>
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-border/50 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              <th className="pb-4 font-bold">Product</th>
-              <th className="pb-4 font-bold">Qty</th>
-              <th className="pb-4 font-bold">Unit Price</th>
-              <th className="pb-4 font-bold">Subtotal</th>
+            <tr className="border-b border-border/50 text-xs font-bold text-muted-foreground uppercase tracking-wider bg-muted/20">
+              <th className="p-4">Product</th>
+              <th className="p-4">Quantity</th>
+              <th className="p-4">Unit Price</th>
+              <th className="p-4 text-right">Subtotal</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/30">
-            {order.order_items?.map((item: any) => {
-              const product = item.products;
-              const primaryImage = product?.images?.find((img: any) => img.is_primary)?.image_url 
-                || product?.images?.[0]?.image_url 
-                || "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=200&q=80";
-
-              return (
-                <tr key={item.id} className="group">
-                  <td className="py-4 flex items-center gap-4">
+          <tbody className="divide-y divide-border/20">
+            {order.orderItems?.map((item, idx) => (
+              <tr key={idx} className="hover:bg-muted/10 transition-colors">
+                <td className="p-4 flex items-center gap-3">
+                  {item.imageUrl ? (
                     <div className="relative h-12 w-12 rounded bg-muted overflow-hidden shrink-0">
-                      <Image src={primaryImage} alt={product?.name || "Product"} fill className="object-cover" />
+                      <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
                     </div>
-                    <span className="font-medium">{product?.name || "Unknown Product"}</span>
-                  </td>
-                  <td className="py-4 text-muted-foreground">{item.quantity}</td>
-                  <td className="py-4 text-muted-foreground">{formatPrice(item.price)}</td>
-                  <td className="py-4 font-semibold">{formatPrice(item.price * item.quantity)}</td>
-                </tr>
-              );
-            })}
+                  ) : (
+                    <div className="h-12 w-12 rounded bg-muted flex items-center justify-center shrink-0">
+                      <Package className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <span className="font-medium text-sm">{item.name}</span>
+                </td>
+                <td className="p-4 text-muted-foreground">{item.qty}</td>
+                <td className="p-4 text-muted-foreground">{formatPrice(item.price)}</td>
+                <td className="p-4 text-right font-semibold">{formatPrice(item.price * item.qty)}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
       {/* Footer Section */}
-      <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          Total: <span className="text-blue-600">{formatPrice(order.total_amount)}</span>
-        </h2>
-        
-        <OrderStatusUpdate orderId={order.id} currentStatus={order.status} />
+      <div className="glass-card rounded-2xl border border-border/50 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Order Value</span>
+          <h2 className="text-3xl font-extrabold text-foreground">
+            {formatPrice(order.totalPrice)}
+          </h2>
+        </div>
+
+        <OrderStatusUpdate
+          orderId={order._id || order.id}
+          currentStatus={currentStatus}
+        />
       </div>
 
-      {/* Notes Box */}
-      <div className="mt-8 bg-muted/30 border border-border/50 p-4 rounded-lg">
-        <p className="text-sm font-medium text-foreground mb-1">Notes: <span className="text-muted-foreground font-normal">\\p\\</span></p>
-      </div>
-
+      {/* Cancellation Banner if Cancelled */}
+      {order.isCancelled && (
+        <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-xl text-destructive text-sm flex items-center gap-2">
+          <XCircle className="h-5 w-5 shrink-0" />
+          <span>
+            <strong>Order Cancelled: </strong>
+            {order.cancelReason || "No specific reason provided."}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

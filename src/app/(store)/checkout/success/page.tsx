@@ -34,15 +34,15 @@ function CheckoutSuccessContent() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
-        <Link href="/shop">
-          <Button size="lg" className="rounded-full w-full sm:w-auto h-12 px-8">
+        <Link href="/account?tab=orders">
+          <Button size="lg" className="rounded-full w-full sm:w-auto h-12 px-8 font-semibold">
             <ShoppingBag className="mr-2 h-5 w-5" />
-            Continue Shopping
+            Track Order & History
           </Button>
         </Link>
-        <Link href="/">
+        <Link href="/shop">
           <Button variant="outline" size="lg" className="rounded-full w-full sm:w-auto h-12 px-8">
-            Return Home
+            Continue Shopping
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </Link>

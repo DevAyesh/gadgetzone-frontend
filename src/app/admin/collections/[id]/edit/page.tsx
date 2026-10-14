@@ -1,21 +1,26 @@
-// @ts-nocheck
-const mq = { select:function(){return this}, eq:function(){return this}, order:function(){return this}, limit:function(){return this}, single:async function(){return {data:null,error:null}}, ilike:function(){return this}, returns:function(){return this}, then:function(cb: any){cb({data:[],error:null})} };
-const createClient = async () => ({ from: () => mq, insert: () => mq, update: () => mq, delete: () => mq, auth: { getUser: async () => ({ data: { user: null } }), signOut: async () => {} } }) as any;
-const createSupabaseClient = createClient;
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { updateCollection } from "../../actions";
 import { notFound } from "next/navigation";
+import { getCollectionById } from "@/lib/api";
+
+export const dynamic = 'force-dynamic';
 
 export default async function EditCollectionPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const supabase = await createClient();
-  const { data: collection } = await supabase.from("collections").select("*").eq("id", params.id).single();
+  let collection: any = null;
+  try {
+    collection = await getCollectionById(params.id, { cache: "no-store" });
+  } catch {
+    collection = null;
+  }
 
   if (!collection) {
     notFound();
   }
+
+  const collectionId = collection.id || collection._id;
 
   return (
     <div className="space-y-8 max-w-xl mx-auto">
@@ -32,7 +37,7 @@ export default async function EditCollectionPage(props: { params: Promise<{ id: 
         </CardHeader>
         <CardContent>
           <form action={updateCollection} className="space-y-6">
-            <input type="hidden" name="id" value={collection.id} />
+            <input type="hidden" name="id" value={collectionId} />
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="name">Collection Name</label>
               <input 
@@ -46,6 +51,14 @@ export default async function EditCollectionPage(props: { params: Promise<{ id: 
               <input 
                 id="slug" name="slug" required type="text"
                 defaultValue={collection.slug}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="description">Description (Optional)</label>
+              <input 
+                id="description" name="description" type="text"
+                defaultValue={collection.description || ""}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
             </div>

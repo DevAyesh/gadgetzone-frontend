@@ -1,121 +1,188 @@
 "use server";
-// @ts-nocheck
-const mq = { select:function(){return this}, eq:function(){return this}, order:function(){return this}, limit:function(){return this}, single:async function(){return {data:null,error:null}}, ilike:function(){return this}, returns:function(){return this}, then:function(cb: any){cb({data:[],error:null})} };
-const createClient = async () => ({ from: () => mq, insert: () => mq, update: () => mq, delete: () => mq, auth: { getUser: async () => ({ data: { user: null } }), signOut: async () => {} } }) as any;
-const createSupabaseClient = createClient;
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
-export async function addProduct(formData: FormData) {
-  const supabase = await createClient();
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+export async function addProduct(formData: FormData, token?: string | null) {
+  const tokenVal = token || (formData.get("token") as string | null);
 
   const name = formData.get("name") as string;
-  const slug = formData.get("slug") as string;
   const category_id = formData.get("category_id") as string;
-  const collection_id = formData.get("collection_id") as string;
-  const price = parseFloat(formData.get("price") as string) * 100; // Convert to cents
-  const oldPriceStr = formData.get("old_price") as string;
-  const old_price = oldPriceStr ? parseFloat(oldPriceStr) * 100 : null;
-  const stock = parseInt(formData.get("stock") as string, 10);
-  const badge = formData.get("badge") as string;
-  const description = formData.get("description") as string;
+  const category = (formData.get("category") as string) || (category_id && category_id !== "none" ? category_id : "General");
+  const priceInput = formData.get("price") as string;
+  const price = priceInput ? Math.round(parseFloat(priceInput) * 100) : 0;
+  const stockInput = formData.get("stock") as string;
+  const stock = stockInput ? parseInt(stockInput, 10) : 100;
+  const description = (formData.get("description") as string) || "No description provided";
   const image_url = formData.get("image_url") as string;
-  const is_popular = formData.get("is_popular") === "on";
-
-  const { data: insertedProduct, error } = await supabase.from("products").insert({
-    name,
-    slug,
-    category_id: category_id === "none" ? null : category_id,
-    collection_id: collection_id === "none" ? null : collection_id,
-    price,
-    old_price,
-    stock,
-    badge: badge === "NONE" ? "" : badge,
-    description,
-    is_active: true,
-    is_popular,
-  }).select("id").single();
-
-  if (error) {
-    console.error("Error inserting product:", error);
-    redirect(`/admin/products/new?error=${encodeURIComponent(error.message)}`);
-  }
-
-  // Insert image if provided
-  if (image_url && insertedProduct) {
-    await supabase.from("product_images").insert({
-      product_id: insertedProduct.id,
-      image_url,
-      is_primary: true
-    });
-  }
-
-  revalidatePath("/admin/products");
-  revalidatePath("/shop");
-  revalidatePath("/"); // Update homepage New Arrivals / Popular
-  redirect("/admin/products");
-}
-
-export async function deleteProduct(formData: FormData) {
-  const supabase = await createClient();
-  const id = formData.get("id") as string;
-  
-  const { error } = await supabase.from("products").delete().eq("id", id);
-  if (error) {
-    console.error("Delete product error:", error);
-    // Ideally we would redirect with error, but delete is often a hidden form
-  }
-
-  revalidatePath("/admin/products");
-  revalidatePath("/shop");
-  revalidatePath("/"); // Update homepage
-}
-
-export async function updateProduct(formData: FormData) {
-  const supabase = await createClient();
-
-  const id = formData.get("id") as string;
-  const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
-  const category_id = formData.get("category_id") as string;
-  const collection_id = formData.get("collection_id") as string;
-  const price = parseFloat(formData.get("price") as string) * 100;
-  const stock = parseInt(formData.get("stock") as string, 10);
-  const badge = formData.get("badge") as string;
-  const description = formData.get("description") as string;
-  const image_url = formData.get("image_url") as string;
-  const is_popular = formData.get("is_popular") === "on";
 
-  const { error } = await supabase.from("products").update({
-    name,
-    slug,
-    category_id: category_id === "none" ? null : category_id,
-    collection_id: collection_id === "none" ? null : collection_id,
-    price,
-    stock,
-    badge: badge === "NONE" ? "" : badge,
-    description,
-    is_popular,
-  }).eq("id", id);
-
-  if (error) {
-    console.error("Update product error:", error);
-    redirect(`/admin/products/${id}/edit?error=${encodeURIComponent(error.message)}`);
+  const backendFormData = new FormData();
+  backendFormData.append("name", name);
+  backendFormData.append("category", category);
+  backendFormData.append("price", String(price));
+  backendFormData.append("countInStock", String(stock));
+  backendFormData.append("description", description);
+  if (slug) {
+    backendFormData.append("slug", slug);
   }
-
   if (image_url) {
-    // Basic implementation: delete old images and insert the new one
-    await supabase.from("product_images").delete().eq("product_id", id);
-    await supabase.from("product_images").insert({
-      product_id: id,
-      image_url,
-      is_primary: true
-    });
+    backendFormData.append("image_url", image_url);
+  }
+
+  // Append any uploaded image files from device
+  const files = formData.getAll("images");
+  for (const item of files) {
+    if (item instanceof File && item.size > 0) {
+      backendFormData.append("images", item);
+    }
+  }
+  const altFiles = formData.getAll("imageFiles");
+  for (const item of altFiles) {
+    if (item instanceof File && item.size > 0) {
+      backendFormData.append("images", item);
+    }
+  }
+
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+  if (tokenVal) {
+    headers["Authorization"] = `Bearer ${tokenVal}`;
+  }
+
+  const res = await fetch(`${API_URL}/api/products/admin`, {
+    method: "POST",
+    headers,
+    body: backendFormData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    const errorMsg =
+      data.message ||
+      (Array.isArray(data.errors) ? data.errors.join(", ") : "Failed to create product");
+    console.error("Error creating product:", errorMsg);
+    throw new Error(errorMsg);
   }
 
   revalidatePath("/admin/products");
-  revalidatePath(`/shop/${slug}`);
-  revalidatePath("/"); // Update homepage
-  redirect("/admin/products");
+  revalidatePath("/shop");
+  revalidatePath("/");
+  return data;
+}
+
+export async function deleteProduct(formData: FormData, token?: string | null) {
+  const id = formData.get("id") as string;
+  const tokenVal = token || (formData.get("token") as string | null);
+  if (!id) return;
+
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+  if (tokenVal) {
+    headers["Authorization"] = `Bearer ${tokenVal}`;
+  }
+
+  try {
+    await fetch(`${API_URL}/api/products/admin/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers,
+    });
+  } catch (err) {
+    console.error("Delete product error:", err);
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+  revalidatePath("/");
+}
+
+export async function updateProduct(formData: FormData, token?: string | null) {
+  const id = formData.get("id") as string;
+  const tokenVal = token || (formData.get("token") as string | null);
+  if (!id) {
+    throw new Error("Product ID is required for update");
+  }
+
+  const name = formData.get("name") as string;
+  const category_id = formData.get("category_id") as string;
+  const category = (formData.get("category") as string) || (category_id && category_id !== "none" ? category_id : "General");
+  const priceInput = formData.get("price") as string;
+  const price = priceInput ? Math.round(parseFloat(priceInput) * 100) : 0;
+  const stockInput = formData.get("stock") as string;
+  const stock = stockInput ? parseInt(stockInput, 10) : 0;
+  const description = (formData.get("description") as string) || "";
+  const image_url = formData.get("image_url") as string;
+  const slug = formData.get("slug") as string;
+
+  const backendFormData = new FormData();
+  backendFormData.append("name", name);
+  backendFormData.append("category", category);
+  backendFormData.append("price", String(price));
+  backendFormData.append("countInStock", String(stock));
+  backendFormData.append("description", description);
+  if (slug) {
+    backendFormData.append("slug", slug);
+  }
+  if (image_url) {
+    backendFormData.append("image_url", image_url);
+  }
+
+  const files = formData.getAll("images");
+  for (const item of files) {
+    if (item instanceof File && item.size > 0) {
+      backendFormData.append("images", item);
+    }
+  }
+  const altFiles = formData.getAll("imageFiles");
+  for (const item of altFiles) {
+    if (item instanceof File && item.size > 0) {
+      backendFormData.append("images", item);
+    }
+  }
+
+  const removeImages = formData.getAll("removeImages");
+  for (const rImg of removeImages) {
+    if (typeof rImg === "string" && rImg) {
+      backendFormData.append("removeImages", rImg);
+    }
+  }
+
+  const existingImages = formData.getAll("existingImages");
+  for (const eImg of existingImages) {
+    if (typeof eImg === "string" && eImg) {
+      backendFormData.append("existingImages", eImg);
+    }
+  }
+
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+  if (tokenVal) {
+    headers["Authorization"] = `Bearer ${tokenVal}`;
+  }
+
+  const res = await fetch(`${API_URL}/api/products/admin/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers,
+    body: backendFormData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    const errorMsg =
+      data.message ||
+      (Array.isArray(data.errors) ? data.errors.join(", ") : "Failed to update product");
+    console.error("Update product error:", errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+  revalidatePath("/");
+  return data;
 }
