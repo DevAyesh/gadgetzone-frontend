@@ -39,14 +39,28 @@ const parsePriceToMinorUnits = (value: string) => {
 export function ShopProductListing({
   products,
   initialCategory = "",
+  initialSearch = "",
 }: {
   products: CustomerProduct[];
   initialCategory?: string;
+  initialSearch?: string;
 }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
   const [minimumPrice, setMinimumPrice] = useState("");
   const [maximumPrice, setMaximumPrice] = useState("");
+
+  const [prevInitialSearch, setPrevInitialSearch] = useState(initialSearch);
+  if (prevInitialSearch !== initialSearch) {
+    setPrevInitialSearch(initialSearch);
+    setSearch(initialSearch);
+  }
+
+  const [prevInitialCategory, setPrevInitialCategory] = useState(initialCategory);
+  if (prevInitialCategory !== initialCategory) {
+    setPrevInitialCategory(initialCategory);
+    setCategory(initialCategory);
+  }
 
   const categories = useMemo(() => {
     const uniqueCategories = new Map<string, CategoryOption>();
@@ -63,27 +77,54 @@ export function ShopProductListing({
 
   const minimumPriceInMinorUnits = parsePriceToMinorUnits(minimumPrice);
   const maximumPriceInMinorUnits = parsePriceToMinorUnits(maximumPrice);
-  const normalizedSearch = search.trim().toLocaleLowerCase();
+  const normalizedSearch = search.trim().toLowerCase();
 
-  const filteredProducts = useMemo(
-    () =>
-      products.filter((product) => {
-        const prodCat = getProductCategory(product);
-        const matchesSearch =
-          !normalizedSearch || product.name.toLocaleLowerCase().includes(normalizedSearch);
-        const matchesCategory =
-          !category ||
-          prodCat?.value.toLowerCase() === category.toLowerCase() ||
-          prodCat?.label.toLowerCase() === category.toLowerCase();
-        const matchesMinimumPrice =
-          minimumPriceInMinorUnits === null || product.price >= minimumPriceInMinorUnits;
-        const matchesMaximumPrice =
-          maximumPriceInMinorUnits === null || product.price <= maximumPriceInMinorUnits;
+  const filteredProducts = useMemo(() => {
+    const searchTokens = normalizedSearch.split(/\s+/).filter(Boolean);
 
-        return matchesSearch && matchesCategory && matchesMinimumPrice && matchesMaximumPrice;
-      }),
-    [category, maximumPriceInMinorUnits, minimumPriceInMinorUnits, normalizedSearch, products],
-  );
+    return products.filter((product) => {
+      const prodCat = getProductCategory(product);
+
+      // Search matching across name, description, badge, category, and brand
+      const matchesSearch = (() => {
+        if (!normalizedSearch || searchTokens.length === 0) return true;
+
+        const catLabel = prodCat?.label || "";
+        const catValue = prodCat?.value || "";
+        const description = product.description || "";
+        const badge = product.badge || "";
+        const collection = product.collection
+          ? typeof product.collection === "string"
+            ? product.collection
+            : product.collection.name || ""
+          : "";
+        const brand = (product as unknown as { brand?: string }).brand || "";
+
+        const searchableText = `${product.name} ${description} ${badge} ${brand} ${collection} ${catLabel} ${catValue}`.toLowerCase();
+
+        if (searchableText.includes(normalizedSearch)) return true;
+
+        return searchTokens.every((token) => {
+          if (searchableText.includes(token)) return true;
+          if (token.endsWith("s") && token.length > 3 && searchableText.includes(token.slice(0, -1))) {
+            return true;
+          }
+          return false;
+        });
+      })();
+
+      const matchesCategory =
+        !category ||
+        prodCat?.value.toLowerCase() === category.toLowerCase() ||
+        prodCat?.label.toLowerCase() === category.toLowerCase();
+      const matchesMinimumPrice =
+        minimumPriceInMinorUnits === null || product.price >= minimumPriceInMinorUnits;
+      const matchesMaximumPrice =
+        maximumPriceInMinorUnits === null || product.price <= maximumPriceInMinorUnits;
+
+      return matchesSearch && matchesCategory && matchesMinimumPrice && matchesMaximumPrice;
+    });
+  }, [category, maximumPriceInMinorUnits, minimumPriceInMinorUnits, normalizedSearch, products]);
 
   const activeFilterCount = [
     Boolean(normalizedSearch),
@@ -98,6 +139,9 @@ export function ShopProductListing({
     setCategory("");
     setMinimumPrice("");
     setMaximumPrice("");
+    if (typeof window !== "undefined" && window.location.search) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
   };
 
   if (products.length === 0) {
