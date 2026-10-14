@@ -215,32 +215,36 @@ function AccountPageContent() {
         country: "Sri Lanka",
       };
 
-      window.payhere.onCompleted = async function onCompleted(orderId: string) {
-        try {
-          const targetOrderId = String(rawId) || orderId;
-          if (targetOrderId) {
-            await confirmPayment(targetOrderId);
+      const payhereInstance = typeof window !== "undefined" ? (window as any).payhere : null;
+      if (payhereInstance) {
+        payhereInstance.onCompleted = async function onCompleted(orderId: string) {
+          try {
+            const targetOrderId = String(rawId) || orderId;
+            if (targetOrderId) {
+              await confirmPayment(targetOrderId);
+            }
+          } catch (confirmErr) {
+            console.warn("Could not confirm payment on server:", confirmErr);
           }
-        } catch (confirmErr) {
-          console.warn("Could not confirm payment on server:", confirmErr);
-        }
-        toast.success("Payment completed successfully!");
-        setRetryingOrderId(null);
-        await fetchOrders();
-      };
+          toast.success("Payment completed successfully!");
+          setRetryingOrderId(null);
+          await fetchOrders();
+        };
 
+        payhereInstance.onDismissed = function onDismissed() {
+          toast.info("Payment window closed. You can retry paying whenever you're ready.");
+          setRetryingOrderId(null);
+        };
 
-      window.payhere.onDismissed = function onDismissed() {
-        toast.info("Payment window closed. You can retry paying whenever you're ready.");
-        setRetryingOrderId(null);
-      };
+        payhereInstance.onError = function onError(error: any) {
+          toast.error(`Payment processing error: ${error || 'Payment failed'}`);
+          setRetryingOrderId(null);
+        };
 
-      window.payhere.onError = function onError(error: any) {
-        toast.error(`Payment processing error: ${error || 'Payment failed'}`);
-        setRetryingOrderId(null);
-      };
+        payhereInstance.startPayment(payhereConfig);
+        return;
+      }
 
-      window.payhere.startPayment(payhereConfig);
     } catch (err: any) {
       toast.error(err instanceof ApiError ? err.message : "Failed to initiate payment retry.");
       setRetryingOrderId(null);

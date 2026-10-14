@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Truck, RefreshCcw, CreditCard, Headset, Zap } from "lucide-react";
-import { SiSamsung, SiGoogle, SiSony, SiApple, SiBose, SiJbl, SiXiaomi, SiFitbit } from "react-icons/si";
+import { SiSamsung, SiSony, SiApple, SiBose, SiJbl, SiXiaomi, SiFitbit } from "react-icons/si";
+
 import { FcGoogle } from "react-icons/fc";
 import { buttonVariants } from "@/components/ui/button";
 import { AddToCartButton } from "@/components/add-to-cart-button";
