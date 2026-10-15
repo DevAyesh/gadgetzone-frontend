@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, Smartphone, Laptop, Headphones, Camera, Watch, Plug } from "lucide-react";
+import { ArrowRight, Smartphone, Laptop, Headphones, Camera, Watch, Plug, Gamepad2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const categories = [
   { name: "Smartphones", slug: "smartphones", icon: Smartphone, desc: "Latest flagship and budget phones" },
   { name: "Laptops", slug: "laptops", icon: Laptop, desc: "High-performance and ultrathin laptops" },
   { name: "Audio", slug: "audio", icon: Headphones, desc: "Premium headphones and speakers" },
+  { name: "Gaming", slug: "gaming", icon: Gamepad2, desc: "Gaming consoles, controllers, and gear" },
   { name: "Cameras", slug: "cameras", icon: Camera, desc: "DSLRs, mirrorless, and action cameras" },
   { name: "Wearables", slug: "wearables", icon: Watch, desc: "Smartwatches and fitness trackers" },
   { name: "Accessories", slug: "accessories", icon: Plug, desc: "Cables, chargers, and cases" },
