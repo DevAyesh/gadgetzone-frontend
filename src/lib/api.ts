@@ -356,6 +356,16 @@ export const getAdminDailySales = (days: number = 30) =>
 export const getAdminMonthlySales = (months: number = 12) =>
   apiFetch<{ success: boolean; data: Array<{ month: string; totalRevenue: number; orderCount: number }> }>(`/api/orders/admin/sales/monthly?months=${months}`);
 
+export interface TopSellingProduct {
+  productId: string;
+  name: string;
+  totalQtySold: number;
+  totalRevenue: number;
+}
+
+export const getAdminTopSellingProducts = (limit: number = 5) =>
+  apiFetch<{ success: boolean; data: TopSellingProduct[] }>(`/api/orders/admin/sales/top-products?limit=${limit}`);
+
 // ─── Admin Product Management Endpoints ─────────────────────────────────────
 
 export const createProductAdmin = (data: FormData | {
