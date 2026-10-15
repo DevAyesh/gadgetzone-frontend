@@ -7,11 +7,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { HeroSlider } from "@/components/hero-slider";
-import { formatPrice } from "@/lib/utils";
 import { getProducts, getCategories } from "@/lib/api";
 import type { CustomerProduct } from "@/lib/types/customer";
+import { PromoCountdown } from "@/components/promo-countdown";
 
 function HomeProductCard({ product }: { product: CustomerProduct }) {
   const imageUrl = product.images?.find((img) => img.is_primary)?.image_url ?? product.images?.[0]?.image_url ?? product.imageUrl ?? "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80";
@@ -236,8 +236,11 @@ export default async function Home() {
           <h2 className="text-3xl font-extrabold tracking-tight mb-8">Shop Collection</h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 h-auto lg:h-[600px]">
-            {/* Left Large Box - Centered Text */}
-            <div className="rounded-2xl relative overflow-hidden flex flex-col justify-center items-center text-center h-[400px] lg:h-full group cursor-pointer shadow-sm">
+            {/* Left Large Box - Centered Text (Apple Products) */}
+            <Link
+              href="/collections/apple-products"
+              className="rounded-2xl relative overflow-hidden flex flex-col justify-center items-center text-center h-[400px] lg:h-full group cursor-pointer shadow-sm block"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="https://pisces.bbystatic.com/image2/BestBuy_US/dam/bento-4844950-FY26-AppleBrandStore-AppleDeals_sv-b038cf90-9b51-4a56-b959-2a7f7c42f29a.jpg;format=webp"
@@ -247,16 +250,19 @@ export default async function Home() {
               <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors pointer-events-none" />
               <div className="relative z-10 p-8 text-white flex flex-col items-center">
                 <h3 className="text-3xl md:text-5xl font-bold mb-3 tracking-tight">Apple Products</h3>
-                <Link href="/collections/apple-products" className="text-sm font-semibold hover:underline inline-flex items-center gap-1 group/link text-white/90">
-                  Explore <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
-                </Link>
+                <span className="text-sm font-semibold inline-flex items-center gap-1 group-hover:underline text-white/90">
+                  Explore <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                </span>
               </div>
-            </div>
+            </Link>
 
             {/* Right Stacked Boxes */}
             <div className="grid grid-rows-2 gap-4 md:gap-6 h-[800px] lg:h-full">
-              {/* Top Wide Box - Top Left Text (Now Gaming Consoles) */}
-              <div className="rounded-2xl relative overflow-hidden flex flex-col justify-start items-start h-full group cursor-pointer shadow-sm">
+              {/* Top Wide Box - Top Left Text (Gaming Consoles) */}
+              <Link
+                href="/shop?category=gaming"
+                className="rounded-2xl relative overflow-hidden flex flex-col justify-start items-start h-full group cursor-pointer shadow-sm block"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="https://pisces.bbystatic.com/image2/BestBuy_US/dam/4672150-VG-cope-0389c629-d4c2-4afd-9ec0-46adadd4b8cf.jpg;maxHeight=455;maxWidth=815"
@@ -266,16 +272,19 @@ export default async function Home() {
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-transparent pointer-events-none transition-opacity group-hover:opacity-90" />
                 <div className="relative z-10 p-8 text-white text-left">
                   <h3 className="text-2xl md:text-4xl font-bold mb-2 tracking-tight">Gaming Consoles</h3>
-                  <Link href="/shop?category=gaming-consoles" className="text-sm font-semibold hover:underline inline-flex items-center gap-1 group/link text-white/90">
-                    Explore <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
-                  </Link>
+                  <span className="text-sm font-semibold inline-flex items-center gap-1 group-hover:underline text-white/90">
+                    Explore <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                  </span>
                 </div>
-              </div>
+              </Link>
 
               {/* Bottom Split Boxes */}
               <div className="grid grid-cols-2 gap-4 md:gap-6 h-full">
                 {/* Bottom Left - Centered Text (Accessories) */}
-                <div className="rounded-2xl relative overflow-hidden flex flex-col justify-center items-center text-center h-full group cursor-pointer shadow-sm">
+                <Link
+                  href="/shop?category=accessories"
+                  className="rounded-2xl relative overflow-hidden flex flex-col justify-center items-center text-center h-full group cursor-pointer shadow-sm block"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="https://cdn.packhacker.com/2022/07/f1b89bdb-travel-tech-acc-featured.jpg"
@@ -285,14 +294,17 @@ export default async function Home() {
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors pointer-events-none" />
                   <div className="relative z-10 p-4 text-white flex flex-col items-center">
                     <h3 className="text-xl md:text-3xl font-bold mb-2 tracking-tight">Accessories</h3>
-                    <Link href="/shop?category=accessories" className="text-xs md:text-sm font-semibold hover:underline inline-flex items-center gap-1 group/link text-white/90">
-                      Explore <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
-                    </Link>
+                    <span className="text-xs md:text-sm font-semibold inline-flex items-center gap-1 group-hover:underline text-white/90">
+                      Explore <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                    </span>
                   </div>
-                </div>
+                </Link>
 
-                {/* Bottom Right - Centered Text (Now Headphones) */}
-                <div className="rounded-2xl relative overflow-hidden flex flex-col justify-center items-center text-center h-full group cursor-pointer shadow-sm">
+                {/* Bottom Right - Centered Text (Headphones) */}
+                <Link
+                  href="/collections/headphones"
+                  className="rounded-2xl relative overflow-hidden flex flex-col justify-center items-center text-center h-full group cursor-pointer shadow-sm block"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="https://dlifestylesg.com/cdn/shop/files/ULT_WEAR_Black_Standard-Large_1200x.jpg?v=1712806803"
@@ -302,11 +314,11 @@ export default async function Home() {
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors pointer-events-none" />
                   <div className="relative z-10 p-4 text-white flex flex-col items-center">
                     <h3 className="text-xl md:text-3xl font-bold mb-2 tracking-tight">Headphones</h3>
-                    <Link href="/collections/headphones" className="text-xs md:text-sm font-semibold hover:underline inline-flex items-center gap-1 group/link text-white/90">
-                      Explore <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
-                    </Link>
+                    <span className="text-xs md:text-sm font-semibold inline-flex items-center gap-1 group-hover:underline text-white/90">
+                      Explore <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                    </span>
                   </div>
-                </div>
+                </Link>
               </div>
             </div>
           </div>
@@ -350,24 +362,7 @@ export default async function Home() {
                 Thousands of high tech are waiting for you
               </p>
 
-              <div className="flex gap-4 mb-8">
-                <div className="flex flex-col items-center">
-                  <div className="bg-white text-black w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center font-bold text-xl">02</div>
-                  <span className="text-[10px] mt-1 md:text-gray-300 text-gray-600">Days</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="bg-white text-black w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center font-bold text-xl">12</div>
-                  <span className="text-[10px] mt-1 md:text-gray-300 text-gray-600">Hours</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="bg-white text-black w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center font-bold text-xl">46</div>
-                  <span className="text-[10px] mt-1 md:text-gray-300 text-gray-600">Minutes</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="bg-white text-black w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center font-bold text-xl">06</div>
-                  <span className="text-[10px] mt-1 md:text-gray-300 text-gray-600">Seconds</span>
-                </div>
-              </div>
+              <PromoCountdown />
 
               <div>
                 <Link href="/shop" className={cn(buttonVariants({ size: "lg" }), "bg-black hover:bg-gray-800 text-white md:bg-white md:text-black md:hover:bg-gray-200 px-8 rounded-md h-12")}>

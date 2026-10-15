@@ -113,10 +113,19 @@ export function ShopProductListing({
         });
       })();
 
+      const targetCat = category.toLowerCase();
+      const productCatVal = (prodCat?.value || "").toLowerCase();
+      const productCatLabel = (prodCat?.label || "").toLowerCase();
+
       const matchesCategory =
         !category ||
-        prodCat?.value.toLowerCase() === category.toLowerCase() ||
-        prodCat?.label.toLowerCase() === category.toLowerCase();
+        productCatVal === targetCat ||
+        productCatLabel === targetCat ||
+        (targetCat === "gaming-consoles" && productCatVal === "gaming") ||
+        (targetCat === "gaming" && (productCatVal === "gaming-consoles" || productCatVal === "gaming")) ||
+        (targetCat === "headphones" && productCatVal === "audio") ||
+        (targetCat === "audio" && (productCatVal === "headphones" || productCatVal === "audio")) ||
+        (targetCat === "apple-products" && (product.name.toLowerCase().includes("apple") || (product as any).brand?.toLowerCase() === "apple"));
       const matchesMinimumPrice =
         minimumPriceInMinorUnits === null || product.price >= minimumPriceInMinorUnits;
       const matchesMaximumPrice =
